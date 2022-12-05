@@ -11,6 +11,4 @@ public class ControllerBase : Controller
     {
         _db = db;
     }
-
-    protected async void SaveDb() => await _db.SaveChangesAsync();
 }
