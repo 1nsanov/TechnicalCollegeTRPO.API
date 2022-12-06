@@ -2,7 +2,7 @@
 
 namespace AspTestStage.Database.Domain;
 
-public class Role : EntityBase
+public partial class Role : EntityBase
 {
     public string Code { get; set; }
     public string Name { get; set; }
