@@ -1,4 +1,5 @@
 ﻿using AspTestStage.Database;
+using AspTestStage.Database.Domain;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AspTestStage.BaseClasses;

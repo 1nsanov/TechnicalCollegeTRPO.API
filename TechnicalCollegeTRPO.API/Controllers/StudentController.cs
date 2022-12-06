@@ -1,21 +1,25 @@
+using AspTestStage.Database;
+using AspTestStage.Database.Domain;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
 namespace AspTestStage.BaseClasses;
 
 [ApiController]
 [Route("api/[controller]")]
 public class StudentController : ControllerBase
 {
-    public StudentController(AppDbContext db) : base(db)
+    private UserController UserController { get; set; }
+    public StudentController(AppDbContext db, UserController userController) : base(db)
     {
+        UserController = userController;
     }
 
     [Authorize]
     [HttpPost("GetById")]
     public IActionResult GetById([FromBody] int id)
     {
-        var roleId = GetRoleIdByCode(Role.Student);
-        var entity = _db.Users.FirstOrDefault(u => u.Id == id && u.RoleId == roleId);
-
-        if (entity is null) throw new ArgumentNullException(nameof(entity));
+        var entity = UserController.GetUserWithRole(id, Role.Student);
 
         return Ok(entity);
     }
@@ -27,31 +31,24 @@ public class StudentController : ControllerBase
         var groups = _db.GroupStudents.Where(g => g.GroupId == groupId);
         if (groups is null) throw new ArgumentNullException(nameof(groups));
 
-        var students = new List<Student>();
-        var roleStudentId = GetRoleIdByCode(Role.Student);
+        var students = new List<User>();
 
-        foreach(group in groups)
+        foreach(var group in groups)
         {
-            var student = _db.Users.FirstOrDefault(u => u.Id == group.StudentId && u.RoleId == roleStudentId);
-            if (student is not null) students.Add(student);
+            var student = UserController.GetUserWithRole(group.StudentId, Role.Student);
+            students.Add(student);
         }
 
-        return Ok(entity);
+        return Ok(students);
     }
 
     [Authorize]
     [HttpPost("GetByTeacherId")]
     public IActionResult GetByTeacherId([FromBody] int teacherId)
     {
+        var groups = _db.Groups.Where(g => g.TeacherId == teacherId).ToList();
+        if (groups is null) throw new ArgumentNullException(nameof(groups));
 
-    }
-
-    //TODO: Перенести в RoleController
-    private int GetRoleIdByCode(string code)
-    {
-        var role = _db.Roles.FirstOrDefault(u => u.Code == code);
-        if (role is null) throw new ArgumentNullException(nameof(role));
-
-        return role.Id;
+        return Ok(groups);
     }
 }

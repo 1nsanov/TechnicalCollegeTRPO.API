@@ -10,8 +10,10 @@ namespace AspTestStage.BaseClasses;
 [Route("api/[controller]")]
 public class GroupController : ControllerBase
 {
-    public GroupController(AppDbContext db) : base(db)
+    private UserController UserController { get; set; }
+    public GroupController(AppDbContext db, UserController userController) : base(db)
     {
+        UserController = userController;
     }
 
     [Authorize(Roles = "teacher")]
@@ -77,6 +79,46 @@ public class GroupController : ControllerBase
         if (entity is null) return BadRequest("groups is null");
 
         return Ok(entity);
+    }
+
+    [Authorize(Roles = "teacher")]
+    [HttpPost("AddStudent")]
+    public async Task<IActionResult> AddStudent([FromBody] GroupStudentDto dto)
+    {
+        var entity = GetGroupStudent(dto);
+
+        await _db.GroupStudents.AddAsync(entity);
+        await _db.SaveChangesAsync();
+
+        return Ok("Student add to group");
+    }
+
+    [Authorize(Roles = "teacher")]
+    [HttpPost("RemoveStudent")]
+    public async Task<IActionResult> RemoveStudent([FromBody] GroupStudentDto dto)
+    {
+        var entity = GetGroupStudent(dto);
+
+        _db.GroupStudents.Remove(entity);
+        await _db.SaveChangesAsync();
+
+        return Ok("Student remove from group");
+    }
+
+
+    private GroupStudent GetGroupStudent(GroupStudentDto dto)
+    {
+        var student = UserController.GetUserWithRole(dto.StudentId, Role.Student);
+        if (student is null) throw new ArgumentException(nameof(student));
+
+        var group = _db.Groups.FirstOrDefault(g => g.Id == dto.GroupId);
+        if (group is null) throw new ArgumentException(nameof(group));
+
+        return new GroupStudent()
+        {
+            GroupId = dto.GroupId,
+            StudentId = dto.StudentId,
+        };
     }
 
     private Group GetGroup(GroupDto dto)

@@ -17,9 +17,11 @@ namespace AspTestStage.BaseClasses;
 public class UserController : ControllerBase
 {
     private IConfiguration _config;
-    public UserController(AppDbContext db, IConfiguration config) : base(db)
+    private RoleController RoleController { get; set; }
+    public UserController(AppDbContext db, IConfiguration config, RoleController roleController) : base(db)
     {
         _config = config;
+        RoleController = roleController;
     }
 
     [AllowAnonymous]
@@ -183,5 +185,14 @@ public class UserController : ControllerBase
             throw new SecurityTokenException("Invalid token");
 
         return principal;
+    }
+
+    public User GetUserWithRole(int userId, string codeRole)
+    {
+        var roleId = RoleController.GetRoleIdByCode(codeRole);
+        var user = _db.Users.FirstOrDefault(x => x.Id == userId && x.RoleId == roleId);
+        if (user is null) throw new ArgumentNullException(nameof(user));
+
+        return user;
     }
 }
