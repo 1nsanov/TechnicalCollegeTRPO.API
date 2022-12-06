@@ -1,12 +1,11 @@
 ﻿using AspTestStage.Database;
-using AspTestStage.Database.Domain;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AspTestStage.BaseClasses;
+namespace TechnicalCollegeTRPO.API.BaseClasses;
 
 public class ControllerBase : Controller
 {
-    internal readonly AppDbContext _db;
+    internal static AppDbContext _db;
 
     public ControllerBase(AppDbContext db)
     {

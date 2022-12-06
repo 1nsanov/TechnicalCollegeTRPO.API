@@ -1,27 +1,29 @@
-﻿using AspTestStage.Database;
-using AspTestStage.Database.Domain;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using AspTestStage.Database;
+using AspTestStage.Database.Domain;
 using AspTestStage.Dto;
 using AspTestStage.Dto.Utillity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Mvc;
+using ControllerBase = TechnicalCollegeTRPO.API.BaseClasses.ControllerBase;
 
-namespace AspTestStage.BaseClasses;
+namespace TechnicalCollegeTRPO.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
     private IConfiguration _config;
-    private RoleController RoleController { get; set; }
-    public UserController(AppDbContext db, IConfiguration config, RoleController roleController) : base(db)
+    private IDistributedCache _cache;
+    public UserController(IConfiguration config, IDistributedCache cache, AppDbContext db) : base(db)
     {
         _config = config;
-        RoleController = roleController;
+        _cache = cache;
     }
 
     [AllowAnonymous]
@@ -65,6 +67,14 @@ public class UserController : ControllerBase
     }
 
     [Authorize]
+    [HttpPost("Logout")]
+    public IActionResult Logout([FromBody] string accessToken)
+    {
+        DeactivateToken(accessToken);
+        return Ok("Logout!");
+    }
+
+    [Authorize]
     [HttpPost("Test")]
     public IActionResult Test()
     {
@@ -83,12 +93,6 @@ public class UserController : ControllerBase
     public IActionResult TestStudent()
     {
         return Ok("You is student!");
-    }
-
-    private bool GetUserByUsername(string username)
-    {
-        var user = _db.Users.FirstOrDefault(u => u.Username == username);
-        return user is not null;
     }
 
     [AllowAnonymous]
@@ -115,6 +119,12 @@ public class UserController : ControllerBase
         user.RefreshToken = newToken.RefreshToken;
 
         return Ok(newToken);
+    }
+
+    private bool GetUserByUsername(string username)
+    {
+        var user = _db.Users.FirstOrDefault(u => u.Username == username);
+        return user is not null;
     }
 
     private TokenUser GenerateTokenUser(User user)
@@ -180,14 +190,22 @@ public class UserController : ControllerBase
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();
-        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
         if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
             throw new SecurityTokenException("Invalid token");
 
         return principal;
     }
 
-    public User GetUserWithRole(int userId, string codeRole)
+    private void DeactivateToken(string token)
+    {
+        _cache.SetString($"tokens:{token}:deactivated", " ", new DistributedCacheEntryOptions()
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1)
+        });
+    }
+
+    public static User GetUserWithRole(int userId, string codeRole)
     {
         var roleId = RoleController.GetRoleIdByCode(codeRole);
         var user = _db.Users.FirstOrDefault(x => x.Id == userId && x.RoleId == roleId);

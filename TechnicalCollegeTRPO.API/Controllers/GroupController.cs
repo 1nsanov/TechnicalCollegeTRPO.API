@@ -3,17 +3,16 @@ using AspTestStage.Database.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechnicalCollegeTRPO.API.Models.Dto.Group;
+using ControllerBase = TechnicalCollegeTRPO.API.BaseClasses.ControllerBase;
 
-namespace AspTestStage.BaseClasses;
+namespace TechnicalCollegeTRPO.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class GroupController : ControllerBase
 {
-    private UserController UserController { get; set; }
-    public GroupController(AppDbContext db, UserController userController) : base(db)
+    public GroupController(AppDbContext db) : base(db)
     {
-        UserController = userController;
     }
 
     [Authorize(Roles = "teacher")]

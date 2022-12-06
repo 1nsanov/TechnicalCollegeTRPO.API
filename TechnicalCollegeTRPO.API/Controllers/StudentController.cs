@@ -1,18 +1,19 @@
+using AspTestStage.BaseClasses;
 using AspTestStage.Database;
 using AspTestStage.Database.Domain;
+using AspTestStage.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ControllerBase = TechnicalCollegeTRPO.API.BaseClasses.ControllerBase;
 
-namespace AspTestStage.BaseClasses;
+namespace TechnicalCollegeTRPO.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class StudentController : ControllerBase
 {
-    private UserController UserController { get; set; }
-    public StudentController(AppDbContext db, UserController userController) : base(db)
+    public StudentController(AppDbContext db) : base(db)
     {
-        UserController = userController;
     }
 
     [Authorize]
@@ -42,7 +43,7 @@ public class StudentController : ControllerBase
         return Ok(students);
     }
 
-    [Authorize]
+    [Authorize(Roles = "teacher")]
     [HttpPost("GetByTeacherId")]
     public IActionResult GetByTeacherId([FromBody] int teacherId)
     {
@@ -50,5 +51,26 @@ public class StudentController : ControllerBase
         if (groups is null) throw new ArgumentNullException(nameof(groups));
 
         return Ok(groups);
+    }
+
+    [Authorize(Roles = "teacher")]
+    [HttpPost("GetAll")]
+    public IActionResult GetAll()
+    {
+        var roleId = RoleController.GetRoleIdByCode(Role.Student);
+        var entity = _db.Users.Where(u => u.RoleId == roleId).ToList();
+        var result = entity.ConvertAll(e => new UserDto()
+        {
+            Id = e.Id,
+            Username = e.Username,
+            RoleId = e.RoleId,
+            Birthdate = e.Birthdate,
+            Email = e.Email,
+            FullName = e.FullName,
+            Password = e.Password,
+            Phone = e.Phone,
+        });
+
+        return Ok(result);
     }
 }
