@@ -106,6 +106,8 @@ public class GroupController : ControllerBase
         return Ok("Student remove from group");
     }
 
+    //TODO: метод GetStudentsFromGroup
+
 
     private GroupStudent GetGroupStudent(GroupStudentDto dto)
     {
