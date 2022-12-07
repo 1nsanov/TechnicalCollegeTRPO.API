@@ -1,5 +1,6 @@
 ﻿using AspTestStage.Database;
 using AspTestStage.Database.Domain;
+using AspTestStage.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechnicalCollegeTRPO.API.Models.Dto.Group;
@@ -65,8 +66,9 @@ public class GroupController : ControllerBase
     public IActionResult GetByGroupId([FromBody] int groupId)
     {
         var entity = GetGroup(groupId);
+        var dto = MapToDto(entity);
 
-        return Ok(entity);
+        return Ok(dto);
     }
 
     [Authorize(Roles = "teacher")]
@@ -75,9 +77,9 @@ public class GroupController : ControllerBase
     {
         var entity = _db.Groups.Where(g => g.TeacherId == teacherId).ToList();
 
-        if (entity is null) return BadRequest("groups is null");
+        var dto = entity.ConvertAll(MapToDto);
 
-        return Ok(entity);
+        return Ok(dto);
     }
 
     [Authorize(Roles = "teacher")]
@@ -138,5 +140,26 @@ public class GroupController : ControllerBase
         if (entity is null) throw new ArgumentNullException(nameof(entity));
 
         return entity;
+    }
+
+    public static GroupDto MapToDto(Group e)
+    {
+        return new GroupDto()
+        {
+            Id = e.Id,
+            TeacherId = e.TeacherId,
+            Number = e.Number,
+            Speciality = e.Speciality,
+        };
+    }
+
+    public static GroupStudentDto MapToDto(GroupStudent e)
+    {
+        return new GroupStudentDto()
+        {
+            Id = e.Id,
+            GroupId = e.GroupId,
+            StudentId = e.StudentId,
+        };
     }
 }

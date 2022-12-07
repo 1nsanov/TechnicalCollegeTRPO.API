@@ -20,9 +20,9 @@ public class StudentController : ControllerBase
     [HttpPost("GetById")]
     public IActionResult GetById([FromBody] int id)
     {
-        var entity = UserController.GetUserWithRole(id, Role.Student);
+        var dto = UserController.GetUserWithRole(id, Role.Student);
 
-        return Ok(entity);
+        return Ok(dto);
     }
 
     [Authorize]
@@ -32,7 +32,7 @@ public class StudentController : ControllerBase
         var groups = _db.GroupStudents.Where(g => g.GroupId == groupId);
         if (groups is null) throw new ArgumentNullException(nameof(groups));
 
-        var students = new List<User>();
+        var students = new List<UserDto>();
 
         foreach(var group in groups)
         {
@@ -50,7 +50,9 @@ public class StudentController : ControllerBase
         var groups = _db.Groups.Where(g => g.TeacherId == teacherId).ToList();
         if (groups is null) throw new ArgumentNullException(nameof(groups));
 
-        return Ok(groups);
+        var dto = groups.ConvertAll(GroupController.MapToDto);
+
+        return Ok(dto);
     }
 
     [Authorize(Roles = "teacher")]
@@ -59,17 +61,7 @@ public class StudentController : ControllerBase
     {
         var roleId = RoleController.GetRoleIdByCode(Role.Student);
         var entity = _db.Users.Where(u => u.RoleId == roleId).ToList();
-        var result = entity.ConvertAll(e => new UserDto()
-        {
-            Id = e.Id,
-            Username = e.Username,
-            RoleId = e.RoleId,
-            Birthdate = e.Birthdate,
-            Email = e.Email,
-            FullName = e.FullName,
-            Password = e.Password,
-            Phone = e.Phone,
-        });
+        var result = entity.ConvertAll(UserController.MapToDto);
 
         return Ok(result);
     }

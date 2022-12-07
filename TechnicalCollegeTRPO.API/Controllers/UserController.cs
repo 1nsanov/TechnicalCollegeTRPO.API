@@ -205,12 +205,27 @@ public class UserController : ControllerBase
         });
     }
 
-    public static User GetUserWithRole(int userId, string codeRole)
+    public static UserDto GetUserWithRole(int userId, string codeRole)
     {
         var roleId = RoleController.GetRoleIdByCode(codeRole);
         var user = _db.Users.FirstOrDefault(x => x.Id == userId && x.RoleId == roleId);
         if (user is null) throw new ArgumentNullException(nameof(user));
 
-        return user;
+        return MapToDto(user);
+    }
+
+    public static UserDto MapToDto(User e)
+    {
+        return new UserDto()
+        {
+            Id = e.Id,
+            RoleId = e.RoleId,
+            FullName = e.FullName,
+            Birthdate = e.Birthdate,
+            Email = e.Email,
+            Password = e.Password,
+            Phone = e.Phone,
+            Username = e.Username
+        };
     }
 }

@@ -1,13 +1,16 @@
-﻿using AspTestStage.Database;
+﻿using AspTestStage.BaseClasses;
+using AspTestStage.Database;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
+using TechnicalCollegeTRPO.API.Models.Dto;
 
 namespace TechnicalCollegeTRPO.API.BaseClasses;
 
-public class ControllerBase : Controller
+public abstract class ControllerBase : Controller 
 {
     internal static AppDbContext _db;
 
-    public ControllerBase(AppDbContext db)
+    protected ControllerBase(AppDbContext db)
     {
         _db = db;
     }
