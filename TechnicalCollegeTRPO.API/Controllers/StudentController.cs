@@ -17,7 +17,7 @@ public class StudentController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("GetById")]
+    [HttpGet("GetById")]
     public IActionResult GetById([FromBody] int id)
     {
         var dto = UserController.GetUserWithRole(id, Role.Student);
@@ -26,7 +26,7 @@ public class StudentController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("GetByGroupId")]
+    [HttpGet("GetByGroupId")]
     public IActionResult GetByGroupId([FromBody] int groupId)
     {
         var groups = _db.GroupStudents.Where(g => g.GroupId == groupId);
@@ -44,7 +44,7 @@ public class StudentController : ControllerBase
     }
 
     [Authorize(Roles = "teacher")]
-    [HttpPost("GetByTeacherId")]
+    [HttpGet("GetByTeacherId")]
     public IActionResult GetByTeacherId([FromBody] int teacherId)
     {
         var groups = _db.Groups.Where(g => g.TeacherId == teacherId).ToList();
@@ -56,7 +56,7 @@ public class StudentController : ControllerBase
     }
 
     [Authorize(Roles = "teacher")]
-    [HttpPost("GetAll")]
+    [HttpGet("GetAll")]
     public IActionResult GetAll()
     {
         var roleId = RoleController.GetRoleIdByCode(Role.Student);

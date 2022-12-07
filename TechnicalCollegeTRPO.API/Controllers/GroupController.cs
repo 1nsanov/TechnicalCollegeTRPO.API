@@ -18,7 +18,7 @@ public class GroupController : ControllerBase
 
     [Authorize(Roles = "teacher")]
     [HttpPost("Add")]
-    public async Task<IActionResult> Add([FromBody] GroupDto? dto)
+    public async Task<IActionResult> Add([FromBody] GroupDto dto)
     {
         if (dto is null) throw new ArgumentNullException(nameof(dto));
 
@@ -62,7 +62,7 @@ public class GroupController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("GetByGroupId")]
+    [HttpGet("GetByGroupId")]
     public IActionResult GetByGroupId([FromBody] int groupId)
     {
         var entity = GetGroup(groupId);
@@ -72,7 +72,7 @@ public class GroupController : ControllerBase
     }
 
     [Authorize(Roles = "teacher")]
-    [HttpPost("GetByTeacherId")]
+    [HttpGet("GetByTeacherId")]
     public IActionResult GetByTeacherId([FromBody] int teacherId)
     {
         var entity = _db.Groups.Where(g => g.TeacherId == teacherId).ToList();
@@ -150,16 +150,6 @@ public class GroupController : ControllerBase
             TeacherId = e.TeacherId,
             Number = e.Number,
             Speciality = e.Speciality,
-        };
-    }
-
-    public static GroupStudentDto MapToDto(GroupStudent e)
-    {
-        return new GroupStudentDto()
-        {
-            Id = e.Id,
-            GroupId = e.GroupId,
-            StudentId = e.StudentId,
         };
     }
 }

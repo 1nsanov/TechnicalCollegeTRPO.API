@@ -67,7 +67,7 @@ public class UserController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("Logout")]
+    [HttpGet("Logout")]
     public IActionResult Logout([FromBody] string accessToken)
     {
         DeactivateToken(accessToken);
@@ -75,21 +75,21 @@ public class UserController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("Test")]
+    [HttpGet("Test")]
     public IActionResult Test()
     {
         return Ok("You is login!");
     }
 
     [Authorize(Roles = "teacher")]
-    [HttpPost("TestTeacher")]
+    [HttpGet("TestTeacher")]
     public IActionResult TestTeacher()
     {
         return Ok("You is teacher!");
     }
 
     [Authorize(Roles = "student")]
-    [HttpPost("TestStudent")]
+    [HttpGet("TestStudent")]
     public IActionResult TestStudent()
     {
         return Ok("You is student!");
