@@ -68,9 +68,15 @@ public class UserController : ControllerBase
 
     [Authorize]
     [HttpGet("Logout")]
-    public IActionResult Logout([FromBody] string accessToken)
+    public async Task<IActionResult> Logout([FromBody] string accessToken)
     {
-        DeactivateToken(accessToken);
+        var user = GetUserByAccessToken(accessToken);
+        if (user == null) return BadRequest("Invalid client request");
+
+        user.RefreshToken = null;
+        user.RefreshTokenExpiryTime = null;
+        await _db.SaveChangesAsync();
+
         return Ok("Logout!");
     }
 
@@ -104,14 +110,8 @@ public class UserController : ControllerBase
         var accessToken = tokenUser.AccessToken;
         var refreshToken = tokenUser.RefreshToken;
 
-        var principal = GetPrincipalFromExpiredToken(accessToken);
-        if (principal is null) return BadRequest("Invalid access token or refresh token");
-
-        var claim = principal.Claims.FirstOrDefault(claim => claim.Type.Contains("nameidentifier"));
-        var username = claim?.Value;
-
-        var user = _db.Users.FirstOrDefault(user => user.Username == username);
-        if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+        var user = GetUserByAccessToken(accessToken);
+        if (user is null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
             return BadRequest("Invalid access token or refresh token");
 
         var newToken = GenerateTokenUser(user);
@@ -125,6 +125,18 @@ public class UserController : ControllerBase
     {
         var user = _db.Users.FirstOrDefault(u => u.Username == username);
         return user is not null;
+    }
+
+    private User? GetUserByAccessToken(string accessToken)
+    {
+        var principal = GetPrincipalFromExpiredToken(accessToken);
+        if (principal is null) throw new Exception("Invalid access token or refresh token");
+
+        var claim = principal.Claims.FirstOrDefault(claim => claim.Type.Contains("nameidentifier"));
+        var username = claim?.Value;
+
+        var user = _db.Users.FirstOrDefault(user => user.Username == username);
+        return user;
     }
 
     private TokenUser GenerateTokenUser(User user)
@@ -195,14 +207,6 @@ public class UserController : ControllerBase
             throw new SecurityTokenException("Invalid token");
 
         return principal;
-    }
-
-    private void DeactivateToken(string token)
-    {
-        _cache.SetString($"tokens:{token}:deactivated", " ", new DistributedCacheEntryOptions()
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1)
-        });
     }
 
     public static UserDto GetUserWithRole(int userId, string codeRole)

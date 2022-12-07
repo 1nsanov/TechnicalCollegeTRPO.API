@@ -62,7 +62,7 @@ public class GroupController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("GetByGroupId")]
+    [HttpPost("GetByGroupId")]
     public IActionResult GetByGroupId([FromBody] int groupId)
     {
         var entity = GetGroup(groupId);
@@ -72,7 +72,7 @@ public class GroupController : ControllerBase
     }
 
     [Authorize(Roles = "teacher")]
-    [HttpGet("GetByTeacherId")]
+    [HttpPost("GetByTeacherId")]
     public IActionResult GetByTeacherId([FromBody] int teacherId)
     {
         var entity = _db.Groups.Where(g => g.TeacherId == teacherId).ToList();
