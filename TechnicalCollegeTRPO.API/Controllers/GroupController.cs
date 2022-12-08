@@ -106,8 +106,19 @@ public class GroupController : ControllerBase
         return Ok("Student remove from group");
     }
 
-    //TODO: метод GetStudentsFromGroup
+    [Authorize]
+    [HttpPost("GetStudentsFromGroup")]
+    public IActionResult GetStudentsFromGroup([FromBody] int groupId)
+    {
+        var group = GetGroup(groupId);
 
+        var gsList = _db.GroupStudents.Where(gs => gs.GroupId == group.Id).ToList();
+        var students = new List<UserDto>();
+        gsList.ForEach(item => students.Add(UserController.GetUserWithRole(item.StudentId, Role.Student)));
+
+        return Ok(students);
+    }
+    
 
     private GroupStudent GetGroupStudent(GroupStudentDto dto)
     {

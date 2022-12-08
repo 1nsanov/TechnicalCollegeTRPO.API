@@ -19,11 +19,9 @@ namespace TechnicalCollegeTRPO.API.Controllers;
 public class UserController : ControllerBase
 {
     private IConfiguration _config;
-    private IDistributedCache _cache;
-    public UserController(IConfiguration config, IDistributedCache cache, AppDbContext db) : base(db)
+    public UserController(IConfiguration config, AppDbContext db) : base(db)
     {
         _config = config;
-        _cache = cache;
     }
 
     [AllowAnonymous]
@@ -67,7 +65,7 @@ public class UserController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("Logout")]
+    [HttpPost("Logout")]
     public async Task<IActionResult> Logout([FromBody] string accessToken)
     {
         var user = GetUserByAccessToken(accessToken);

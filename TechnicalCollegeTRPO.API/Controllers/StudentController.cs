@@ -29,16 +29,12 @@ public class StudentController : ControllerBase
     [HttpPost("GetByGroupId")]
     public IActionResult GetByGroupId([FromBody] int groupId)
     {
-        var groups = _db.GroupStudents.Where(g => g.GroupId == groupId);
+        var groups = _db.GroupStudents.Where(g => g.GroupId == groupId).ToList();
         if (groups is null) throw new ArgumentNullException(nameof(groups));
 
-        var students = new List<UserDto>();
-
-        foreach(var group in groups)
-        {
-            var student = UserController.GetUserWithRole(group.StudentId, Role.Student);
-            students.Add(student);
-        }
+        var students = groups.Select(
+            group => UserController.GetUserWithRole(group.StudentId, Role.Student))
+            .ToList();
 
         return Ok(students);
     }
